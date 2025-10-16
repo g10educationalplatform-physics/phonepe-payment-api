@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coaching Admission Form</title>
+<style>
+body { background-color: #f0f0f0; font-size: 16px; font-family: Arial, sans-serif; padding: 20px; }
+#pdf-frame { width: 100%; height: 600px; border: none; display: none; margin-top: 20px; }
+form { background: white; padding: 20px; border-radius: 10px; max-width: 900px; margin: auto; box-shadow: 0 0 10px #ccc; display: none; }
+button { margin: 10px; padding: 10px 20px; font-size: 16px; background-color: #007BFF; color: white; border: none; border-radius: 6px; cursor: pointer; }
+button:hover { background-color: #0056b3; }
+label { display: block; margin-bottom: 5px; }
+input[type="text"], input[type="email"], input[type="date"], select, textarea, input[type="file"] {
+  width: 100%; padding: 10px; font-size: 16px; border: 1px solid #aaa; border-radius: 5px; margin-bottom: 15px;
+}
+textarea { resize: vertical; }
+input[type="submit"] {
+  background: #007BFF; color: white; padding: 10px 20px; font-size: 16px; border: none; border-radius: 6px; cursor: not-allowed;
+  opacity: 0.6;
+}
+input[type="submit"].enabled { cursor: pointer; opacity: 1; }
+input[type="submit"]:hover.enabled { background-color: #0056b3; }
+.thank-you-message { display: none; max-width: 900px; margin: 20px auto; padding: 20px; background-color: #ffffff; border-radius: 10px; text-align: left; word-wrap: break-word; }
+.thank-you-message h2 { text-align: center; }
+.payment-box { padding: 15px; border: 1px dashed #007BFF; margin: 15px 0; text-align: left; border-radius: 8px; background: #f9f9f9; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.full-width { grid-column: 1 / -1; }
+#photo-preview { display: none; max-width:150px; border:1px solid #ccc; border-radius:8px; padding:5px; }
+#amountLabel { margin-top: 10px; font-weight: bold; color: #333; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+table, th, td { border: none; }
+th, td { padding: 8px; text-align: left; }
+
+@media (max-width: 768px) {
+  body { padding: 10px; font-size: 15px; }
+  form { padding: 15px; }
+  .form-grid { grid-template-columns: 1fr !important; gap: 15px; }
+  input[type="text"], input[type="email"], input[type="date"], select, textarea, input[type="file"] {
+    font-size: 16px; padding: 12px;
+  }
+  button, input[type="submit"] { width: 100%; font-size: 18px; padding: 14px; }
+}
+@media print { button, a[href], #pdf-frame { display: none !important; } }
+</style>
+</head>
+<body>
+
+<div style="text-align: center;">
+  <button type="button" onclick="showPDF()">PROSPECTUS</button>
+  <button type="button" onclick="showForm()">Fill Admission Form</button>
+</div>
+
+<iframe id="pdf-frame" src="https://drive.google.com/file/d/1we22QTVvt33YMLwMx09HFqXeCB0Iai5a/preview"></iframe>
+
+<form id="admission-form" action="https://formspree.io/f/xkgrbpzp" method="POST">
+  <input type="hidden" name="_captcha" value="false">
+  <h2>Admission Form</h2>
+  <h2>G10 EDUCATIONAL PLATFORM</h2>
+
+  <div class="form-grid">
+    <!-- Name & Email -->
+    <div class="full-width"><label>Full Name:</label><input type="text" name="name" required></div>
+    <div><label>Email:</label><input type="email" name="email" required></div>
+    <div><label>Student Phone:</label><input type="text" name="student_phone" required></div>
+    <div class="full-width"><label>School Name:</label><input type="text" name="school" required></div>
+
+    <!-- Gender & DOB -->
+    <div><label>Gender:</label>
+      <select name="gender" required><option value="">--Select--</option><option>Male</option><option>Female</option><option>Other</option></select>
+    </div>
+    <div><label>Date of Birth:</label><input type="date" name="dob" required></div>
+
+    <!-- Course & Service -->
+    <div><label>Course:</label>
+      <select name="course" required>
+        <option value="">--Select Course--</option>
+        <option>IIT-JEE</option><option>NEET</option><option>Foundation</option>
+        <option>CLASS 9 CBSE</option><option>CLASS 9 ICSE</option><option>CLASS 9 SEBA</option>
+        <option>CLASS 10 CBSE</option><option>CLASS 10 ICSE</option><option>CLASS 10 SEBA</option>
+        <option>CLASS 11 CBSE</option><option>CLASS 11 ISE</option><option>CLASS 11 SEBA</option>
+        <option>CLASS 12 CBSE</option><option>CLASS 12 ISE</option><option>CLASS 12 SEBA</option>
+        <option>CUET</option>
+      </select>
+    </div>
+    <div><label>Service Type:</label>
+      <select name="service_type" required>
+        <option value="">--Select Service--</option>
+        <option>HOME TUITION</option><option>INDIVIDUAL COACHING</option>
+        <option>ONLINE COACHING</option><option>DUAL COACHING</option>
+        <option>GROUP COACHING</option><option>SPECIAL GROUP COACHING</option>
+      </select>
+    </div>
+
+    <!-- Subject & Preparing -->
+    <div><label>Subject:</label>
+      <select name="subject" required>
+        <option value="">--Select Subject--</option>
+        <option>Physics</option><option>Chemistry</option><option>Math</option><option>Biology</option>
+        <option>Science</option><option>English</option><option>Hindi</option><option>Social Science</option>
+        <option>Economics</option><option>Physics, Chemistry, Math &amp; Biology</option>
+        <option>Physics &amp; Chemistry</option><option>Physics, Chemistry, &amp; Biology</option>
+        <option>Physics, Chemistry, &amp; Math</option><option>Physics &amp; Biology</option>
+        <option>Chemistry &amp; Biology</option><option>Physics &amp; Math</option>
+        <option>Chemistry &amp; Math</option><option>Math &amp; Biology</option>
+        <option>Science &amp; Math</option><option>NILL</option>
+      </select>
+    </div>
+    <div><label>Preparing for:</label><input type="text" name="preparing_for" required></div>
+
+    <!-- Address & Parent -->
+    <div class="full-width"><label>Present Address:</label><textarea name="address" rows="3" required></textarea></div>
+    <div><label>Parent Name:</label><input type="text" name="parent_name" required></div>
+    <div><label>Parent Phone:</label><input type="text" name="parent_phone" required></div>
+    <div class="full-width"><label>Message:</label><textarea name="message" rows="4"></textarea></div>
+
+    <!-- Photo -->
+    <div class="full-width">
+      <label>Passport Size Photo (Mandatory, ≤80KB):</label>
+      <input type="file" id="photo-file" accept="image/*" required onchange="previewPhoto(event)">
+      <input type="hidden" name="photo_url" id="photo-url">
+      <input type="hidden" name="photo_delete_url" id="photo-delete-url">
+      <img id="photo-preview" src="" alt="Photo Preview">
+    </div>
+
+    <!-- Payment -->
+    <div class="full-width payment-box">
+      <h3>Pay Admission Fee</h3>
+      <button type="button" id="payNowBtn">Pay with PhonePe</button>
+      <div id="amountLabel"></div>
+    </div>
+  </div>
+
+  <input type="submit" id="submitBtn" value="Submit" disabled>
+</form>
+
+<div class="thank-you-message" id="thank-you">
+  <h2>Thank You, <span id="thank-name"></span>!</h2>
+  <p>We have received your form for the <strong><span id="thank-course"></span></strong> course.</p>
+  <p>A confirmation has been sent to <strong><span id="thank-email"></span></strong>.</p>
+  <h3>Your Submitted Form:</h3>
+  <table id="submitted-data"></table>
+  <div style="text-align:center; margin-top: 20px;">
+    <button onclick="window.print()">Print Form</button>
+  </div>
+  <div style="text-align:center; margin-top: 20px;">
+    <a href="https://g10educationalplatformindia.co.in/">Go to Home</a>
+  </div>
+</div>
+
+<script>
+function showPDF(){ document.getElementById('pdf-frame').style.display='block'; document.getElementById('admission-form').style.display='none'; document.getElementById('thank-you').style.display='none'; }
+function showForm(){ document.getElementById('admission-form').style.display='block'; document.getElementById('pdf-frame').style.display='none'; document.getElementById('thank-you').style.display='none'; }
+
+let validPhoto=false;
+function previewPhoto(e){
+  const file=e.target.files[0]; const preview=document.getElementById('photo-preview'); validPhoto=false;
+  if(file){
+    if(file.size>80*1024){ alert("File size exceeds 80 KB."); e.target.value=""; preview.src=""; preview.style.display="none"; return;}
+    validPhoto=true;
+    const reader=new FileReader();
+    reader.onload=ev=>{preview.src=ev.target.result; preview.style.display='block';}
+    reader.readAsDataURL(file);
+  } else {preview.src=""; preview.style.display='none';}
+}
+
+// --- PhonePe Payment Integration ---
+document.getElementById("payNowBtn").addEventListener("click", async ()=>{
+  const service=document.querySelector("select[name='service_type']").value;
+  let amount=0;
+  if(["HOME TUITION","INDIVIDUAL COACHING","ONLINE COACHING","DUAL COACHING"].includes(service)) amount=49;
+  else if(["GROUP COACHING","SPECIAL GROUP COACHING"].includes(service)) amount=99;
+  if(!amount){ alert("Please select a valid service type."); return; }
+  const name=document.querySelector("input[name='name']").value;
+  const email=document.querySelector("input[name='email']").value;
+  try{
+    const res=await fetch("/pay", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({amount,name,email})});
+    const data=await res.json();
+    if(data.phonepePaymentUrl) window.location.href=data.phonepePaymentUrl;
+    else alert("Payment creation failed!");
+  } catch(err){ console.error(err); alert("Payment error!");}
+});
+
+// --- Form Submission ---
+document.getElementById('admission-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  if(!validPhoto){alert("Please upload a valid photo."); return;}
+  const photoFile=document.getElementById('photo-file').files[0];
+  const form=this;
+  try{
+    const fd=new FormData(); fd.append("image",photoFile);
+    const res=await fetch("https://api.imgbb.com/1/upload?key=bfdf6690aa0bfcafdf1492d833e07e5b",{method:"POST",body:fd});
+    const data=await res.json();
+    if(data.success){ document.getElementById('photo-url').value=data.data.url; document.getElementById('photo-delete-url').value=data.data.delete_url; }
+    const formData=new FormData(form); formData.delete('photo-file');
+    const r=await fetch(form.action,{method:'POST',body:formData,headers:{'Accept':'application/json'}});
+    if(r.ok){
+      document.getElementById('thank-name').textContent=formData.get('name');
+      document.getElementById('thank-email').textContent=formData.get('email');
+      document.getElementById('thank-course').textContent=formData.get('course');
+      const labels={name:"Full Name",email:"Email",student_phone:"Student Phone",school:"School Name",gender:"Gender",dob:"Date of Birth",course:"Course",service_type:"Service Type",subject:"Subject",preparing_for:"Preparing For",address:"Present Address",parent_name:"Parent Name",parent_phone:"Parent Phone",message:"Message",photo_url:"Photo",payment_type:"Payment Type",payment_detail:"Payment Detail"};
+      let table="<tr><th>Field</th><th>Value</th><th>Field</th><th>Value</th></tr>";
+      const entries=Array.from(formData.entries()).filter(([key])=>key!="_captcha" && key!=="photo_delete_url");
+      for(let i=0;i<entries.length;i+=2){
+        let [k1,v1]=entries[i]; if(k1==="photo_url") v1=`<img src="${v1}" style="max-width:100px;border-radius:5px;">`;
+        let row=`<tr><td>${labels[k1]||k1}</td><td>${v1}</td>`;
+        if(i+1<entries.length){ let [k2,v2]=entries[i+1]; if(k2==="photo_url") v2=`<img src="${v2}" style="max-width:100px;border-radius:5px;">`; row+=`<td>${labels[k2]||k2}</td><td>${v2}</td>`;} else {row+=`<td></td><td></td>`;}
+        row+=`</tr>`; table+=row;
+      }
+      document.getElementById("submitted-data").innerHTML=table;
+      form.style.display="none"; document.getElementById("thank-you").style.display="block";
+    } else {alert("Form submission failed.");}
+  } catch(err){console.error(err); alert("Error uploading photo or submitting form.");}
+});
+</script>
+
+</body>
+</html>
