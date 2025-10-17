@@ -49,15 +49,11 @@ app.post("/pay", async (req, res) => {
       paymentInstrument: { type: "PAY_PAGE" },
     };
 
-    // --- Debug logs ---
-    console.log("Payment request:", body);
-
     // --- Step 2: Base64 encode ---
     const payload = Buffer.from(JSON.stringify(body)).toString("base64");
 
     // --- Step 3: Generate checksum ---
     const xVerify = generateXVerify(payload);
-    console.log("Checksum (X-VERIFY):", xVerify);
 
     // --- Step 4: Send POST request to PhonePe ---
     const response = await axios.post(
@@ -73,23 +69,23 @@ app.post("/pay", async (req, res) => {
       }
     );
 
-    // --- Step 5: Send redirect URL to frontend ---
+    // --- Step 5: Return URL in expected frontend format ---
     if (response.data?.data?.instrumentResponse?.redirectInfo?.url) {
-      res.json({
+      return res.json({
         success: true,
         phonepePaymentUrl: response.data.data.instrumentResponse.redirectInfo.url,
       });
     } else {
       console.error("Unexpected PhonePe response:", response.data);
-      res.status(400).json({ error: "Payment creation failed", data: response.data });
+      return res.status(400).json({ error: "Payment creation failed", data: response.data });
     }
   } catch (err) {
     console.error("❌ Payment error:", err.response?.data || err.message);
-    res.status(500).json({ error: "Server error during payment" });
+    return res.status(500).json({ error: "Server error during payment" });
   }
 });
 
-// --- Simple Success / Callback handlers (optional placeholders) ---
+// --- Simple Success / Callback handlers ---
 app.get("/payment-success", (req, res) => {
   res.send("<h2>✅ Payment Successful</h2><p>You can now return to the form page.</p>");
 });
