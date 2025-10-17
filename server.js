@@ -49,11 +49,15 @@ app.post("/pay", async (req, res) => {
       paymentInstrument: { type: "PAY_PAGE" },
     };
 
+    // --- Debug logs ---
+    console.log("Payment request:", body);
+
     // --- Step 2: Base64 encode ---
     const payload = Buffer.from(JSON.stringify(body)).toString("base64");
 
     // --- Step 3: Generate checksum ---
     const xVerify = generateXVerify(payload);
+    console.log("Checksum (X-VERIFY):", xVerify);
 
     // --- Step 4: Send POST request to PhonePe ---
     const response = await axios.post(
