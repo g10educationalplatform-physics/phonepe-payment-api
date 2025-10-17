@@ -161,44 +161,38 @@ function previewPhoto(e){
   } else {preview.src=""; preview.style.display='none';}
 }
 
-// --- PhonePe Payment Integration ---
+// --- PhonePe Payment Integration (Updated for Render Backend) ---
 document.getElementById("payNowBtn").addEventListener("click", async () => {
   const service = document.querySelector("select[name='service_type']").value;
   let amount = 0;
   if (["HOME TUITION", "INDIVIDUAL COACHING", "ONLINE COACHING", "DUAL COACHING"].includes(service)) amount = 49;
   else if (["GROUP COACHING", "SPECIAL GROUP COACHING"].includes(service)) amount = 99;
 
-  if (!amount) {
-    alert("Please select a valid service type before payment.");
-    return;
-  }
+  if (!amount) { alert("Please select a valid service type before payment."); return; }
 
   const name = document.querySelector("input[name='name']").value.trim();
   const email = document.querySelector("input[name='email']").value.trim();
 
-  if (!name || !email) {
-    alert("Please enter your name and email before payment.");
-    return;
-  }
+  if (!name || !email) { alert("Please enter your name and email before payment."); return; }
 
   try {
-    const res = await fetch("/pay", {
+    const res = await fetch("https://phonepe-payment-api-6mbm.onrender.com/pay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ amount, name, email }),
     });
     const data = await res.json();
 
-    if (data && data.data && data.data.instrumentResponse && data.data.instrumentResponse.redirectInfo) {
-      const redirectUrl = data.data.instrumentResponse.redirectInfo.url;
-
-      // ✅ Enable form submit after payment
+    // Check if backend returned the redirect URL
+    if (data && data.success && data.phonepePaymentUrl) {
+      // ✅ Enable form submit after successful payment
       localStorage.setItem("paymentDone", "true");
       const btn = document.getElementById("submitBtn");
       btn.disabled = false;
       btn.classList.add("enabled");
 
-      window.location.href = redirectUrl;
+      // Redirect to PhonePe payment page
+      window.location.href = data.phonepePaymentUrl;
     } else {
       console.error("Unexpected response:", data);
       alert("Failed to create payment. Please try again.");
@@ -207,6 +201,48 @@ document.getElementById("payNowBtn").addEventListener("click", async () => {
     console.error("Payment error:", err);
     alert("Error connecting to payment server.");
   }
+});
+
+// --- Enable Submit if payment was previously done ---
+window.addEventListener("load", () => {
+  if (localStorage.getItem("paymentDone") === "true") {
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = false;
+    btn.classList.add("enabled");
+  }
+});
+
+// --- Form submission ---
+document.getElementById('admission-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  if(!validPhoto){ alert("Please upload a valid photo."); return;}
+  const photoFile=document.getElementById('photo-file').files[0];
+  const form=this;
+  try{
+    const fd=new FormData(); fd.append("image",photoFile);
+    const res=await fetch("https://api.imgbb.com/1/upload?key=bfdf6690aa0bfcafdf1492d833e07e5b",{method:"POST",body:fd});
+    const data=await res.json();
+    if(data.success){ document.getElementById('photo-url').value=data.data.url; document.getElementById('photo-delete-url').value=data.data.delete_url; }
+    const formData=new FormData(form); formData.delete('photo-file');
+    const r=await fetch(form.action,{method:'POST',body:formData,headers:{'Accept':'application/json'}});
+    if(r.ok){
+      localStorage.removeItem("paymentDone"); // Reset after submission
+      document.getElementById('thank-name').textContent=formData.get('name');
+      document.getElementById('thank-email').textContent=formData.get('email');
+      document.getElementById('thank-course').textContent=formData.get('course');
+      const labels={name:"Full Name",email:"Email",student_phone:"Student Phone",school:"School Name",gender:"Gender",dob:"Date of Birth",course:"Course",service_type:"Service Type",subject:"Subject",preparing_for:"Preparing For",address:"Present Address",parent_name:"Parent Name",parent_phone:"Parent Phone",message:"Message",photo_url:"Photo"};
+      let table="<tr><th>Field</th><th>Value</th><th>Field</th><th>Value</th></tr>";
+      const entries=Array.from(formData.entries()).filter(([k])=>!["_captcha","photo_delete_url"].includes(k));
+      for(let i=0;i<entries.length;i+=2){
+        let [k1,v1]=entries[i]; if(k1==="photo_url") v1=`<img src="${v1}" style="max-width:100px;border-radius:5px;">`;
+        let row=`<tr><td>${labels[k1]||k1}</td><td>${v1}</td>`;
+        if(i+1<entries.length){ let [k2,v2]=entries[i+1]; if(k2==="photo_url") v2=`<img src="${v2}" style="max-width:100px;border-radius:5px;">`; row+=`<td>${labels[k2]||k2}</td><td>${v2}</td>`;} else {row+=`<td></td><td></td>`;}
+        row+=`</tr>`; table+=row;
+      }
+      document.getElementById("submitted-data").innerHTML=table;
+      form.style.display="none"; document.getElementById("thank-you").style.display="block";
+    } else {alert("Form submission failed.");}
+  } catch(err){ console.error(err); alert("Error uploading photo or submitting form.");}
 });
 
 // --- Enable Submit if payment was previously done ---
