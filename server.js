@@ -1,99 +1,78 @@
+// server.js
 import express from "express";
+import fetch from "node-fetch";
 import cors from "cors";
-import bodyParser from "body-parser";
-import crypto from "crypto";
-import dotenv from "dotenv";
-import axios from "axios";
-
-dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
+app.use(express.json());
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static("public"));
 
-// --- PhonePe Config ---
-const MERCHANT_ID = process.env.MERCHANT_ID;
-const MERCHANT_KEY = process.env.SALT_KEY; // rename for clarity
-const BASE_URL = process.env.BASE_URL;
+// --- PhonePe Sandbox Credentials ---
+const CLIENT_ID = "TESTVVUAT_2502041721357207510164";
+const CLIENT_SECRET = "ZTcxNDQyZjUtZjQ3Mi00MjJmLTgzOWYtMWZmZWQ2ZjdkMzVi";
+const AUTH_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+const PAY_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay";
 
-// --- Helper: Generate X-VERIFY signature ---
-function generateXVerify(payloadBase64) {
-  const stringToHash = payloadBase64 + "/checkout/v2/pay" + MERCHANT_KEY;
-  const sha256 = crypto.createHash("sha256").update(stringToHash).digest("hex");
-  return sha256;
-}
-
-// --- PAY Endpoint ---
+// --- Generate Payment ---
 app.post("/pay", async (req, res) => {
   try {
     const { amount, name, email } = req.body;
-    if (!amount || !name || !email) {
-      return res.status(400).json({ error: "Missing parameters" });
-    }
+    if (!amount) return res.status(400).json({ success: false, message: "Missing amount" });
 
-    const merchantTransactionId = "TXN" + Date.now();
+    // Step 1: Get Auth Token
+    const authRes = await fetch(AUTH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_version: "1",
+        client_secret: CLIENT_SECRET,
+        grant_type: "client_credentials",
+      }),
+    });
+    const authData = await authRes.json();
+    const token = authData.access_token;
 
-    // --- Step 1: Build request body ---
-    const body = {
-      merchantId: MERCHANT_ID,
-      merchantTransactionId,
-      merchantUserId: "USER" + Date.now(),
-      amount: amount * 100, // in paise
-      redirectUrl: `${BASE_URL}/payment-success`,
-      callbackUrl: `${BASE_URL}/payment-callback`,
-      paymentInstrument: { type: "PAY_PAGE" },
-    };
+    // Step 2: Create a unique order ID
+    const orderId = "ORD" + Date.now();
 
-    // --- Step 2: Base64 encode ---
-    const payload = Buffer.from(JSON.stringify(body)).toString("base64");
-
-    // --- Step 3: Generate X-VERIFY signature ---
-    const xVerify = generateXVerify(payload);
-
-    console.log("Payment request payload:", body);
-    console.log("X-VERIFY signature:", xVerify);
-
-    // --- Step 4: POST to PhonePe Sandbox ---
-    const response = await axios.post(
-      "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay",
-      { request: payload },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-VERIFY": xVerify,
-          "X-MERCHANT-ID": MERCHANT_ID,
-          Accept: "application/json",
+    // Step 3: Initiate payment
+    const payRes = await fetch(PAY_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "O-Bearer " + token,
+      },
+      body: JSON.stringify({
+        merchantOrderId: orderId,
+        amount: amount * 100, // convert to paise (₹1 = 100 paise)
+        expireAfter: 1200,
+        metaInfo: { name, email },
+        paymentFlow: {
+          type: "PG_CHECKOUT",
+          message: "G10 Admission Fee",
+          merchantUrls: { redirectUrl: "https://g10educationalplatformindia.co.in/" },
         },
-      }
-    );
+      }),
+    });
 
-    // --- Step 5: Return redirect URL to frontend ---
-    const redirectUrl = response.data?.data?.instrumentResponse?.redirectInfo?.url;
-    if (redirectUrl) {
-      res.json({ success: true, phonepePaymentUrl: redirectUrl });
+    const payData = await payRes.json();
+
+    if (payData.redirectUrl) {
+      res.json({
+        success: true,
+        phonepePaymentUrl: payData.redirectUrl,
+      });
     } else {
-      console.error("Unexpected PhonePe response:", response.data);
-      res.status(400).json({ error: "Payment creation failed", data: response.data });
+      console.error("PhonePe Pay API Error:", payData);
+      res.status(500).json({ success: false, message: "Payment creation failed", details: payData });
     }
   } catch (err) {
-    console.error("❌ Payment error:", err.response?.data || err.message);
-    res.status(500).json({ error: "Server error during payment" });
+    console.error("Server error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// --- Success / Callback handlers ---
-app.get("/payment-success", (req, res) => {
-  res.send("<h2>✅ Payment Successful</h2><p>You can now return to the form page.</p>");
-});
-
-app.post("/payment-callback", (req, res) => {
-  console.log("📞 Callback data:", req.body);
-  res.status(200).send("Callback received");
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+// --- Start server ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
